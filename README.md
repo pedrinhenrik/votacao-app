@@ -68,6 +68,7 @@ cd votacao-app
 
 ## 📦 Estrutura do Projeto
 
+```text
 votacao-app/
 ├── backend/
 │   ├── main.py
@@ -76,11 +77,12 @@ votacao-app/
 │   └── routers/
 ├── frontend/
 │   ├── src/
-│   ├── public/
-│   └── package.json
+│   └── public/
+├── package.json
 ├── requirements.txt
 ├── README.md
 └── .gitignore
+```
 
 ---
 
