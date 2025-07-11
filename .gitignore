@@ -1,3 +1,18 @@
+# Python/venv
 .venv/
+venv/
+*.pyc
 __pycache__/
 .env
+
+# Node.js/React
+node_modules/
+frontend/node_modules/
+dist/
+build/
+npm-debug.log
+
+# IDEs
+.vscode/
+.idea/
+.DS_Store

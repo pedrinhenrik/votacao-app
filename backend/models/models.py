@@ -45,5 +45,6 @@ class Vote(Base):
     id = Column(Integer, primary_key=True, index=True)
     option_id = Column(Integer, ForeignKey("options.id"))
     voter_ip = Column(String)  # ou hash do IP/cookie
+    voter_name = Column(String)  # <-- ADICIONE ESTA LINHA
     
     option = relationship("Option", back_populates="votes")

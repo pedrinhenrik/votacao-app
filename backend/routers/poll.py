@@ -6,16 +6,15 @@ from fastapi.security import HTTPBearer
 from jose import jwt, JWTError
 from datetime import datetime
 import os
+import pytz  # Para ajuste de fuso horário
 
 router = APIRouter(prefix="/polls", tags=["Polls"])
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM")
 
-# Substituímos OAuth2PasswordBearer por HTTPBearer
 oauth2_scheme = HTTPBearer()
 
-# Validação do admin
 def get_current_admin(token=Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
     credentials = token.credentials
     try:
@@ -47,13 +46,19 @@ def create_poll(
     
     try:
         expiration_dt = datetime.fromisoformat(expiration)
-    except ValueError:
-        raise HTTPException(status_code=400, detail="Formato de expiração inválido. Use ISO 8601.")
+        # Se NÃO tem info de fuso, assume America/Sao_Paulo (Brasília)
+        if expiration_dt.tzinfo is None:
+            timezone_sp = pytz.timezone("America/Sao_Paulo")
+            expiration_dt = timezone_sp.localize(expiration_dt)
+        # Agora, converte para UTC
+        expiration_dt_utc = expiration_dt.astimezone(pytz.UTC)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Formato de expiração inválido. Use ISO 8601. {str(e)}")
 
     poll = Poll(
         title=title,
         description=description,
-        expiration=expiration_dt,
+        expiration=expiration_dt_utc,  # Salva já em UTC
         owner_id=admin.id
     )
     db.add(poll)
@@ -73,7 +78,7 @@ def create_poll(
         "expires_at": poll.expiration.isoformat()
     }
 
-# Listar enquetes ativas
+# Listar enquetes ativas (GET /polls/)
 @router.get("/")
 def list_active_polls(db: Session = Depends(get_db)):
     polls = db.query(Poll).filter(
@@ -92,7 +97,7 @@ def list_active_polls(db: Session = Depends(get_db)):
         })
     return response
 
-# Resultados
+# Resultados (GET /polls/{poll_id}/results)
 @router.get("/{poll_id}/results")
 def get_poll_results(poll_id: int, db: Session = Depends(get_db)):
     poll = db.query(Poll).filter(Poll.id == poll_id).first()
